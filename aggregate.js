@@ -24,10 +24,7 @@ const aggregate = (filePath) => {
   }
 
   // reading datafile and making final op
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      throw err;
-    }
+  const data = fs.readFileSync(filePath, 'utf8');
     dataString = data.toString();
     splitData = dataString.split('\n');
     headers = splitData[0].split(',');
@@ -74,6 +71,6 @@ const aggregate = (filePath) => {
       countryObjectsectdefined[contisplitData[i]] = finalsplitData[i];
     }
     fs.writeFileSync('./output/output.json', JSON.stringify(countryObjectsectdefined));
-  });
+
 };
 module.exports = aggregate;
