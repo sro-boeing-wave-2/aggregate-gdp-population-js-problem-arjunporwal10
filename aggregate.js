@@ -1,72 +1,93 @@
-/**
- * Aggregates GDP and Population Data by Continents
- * @param {*} filePath
- */
-const fs = require('fs');
+const fs = require("fs");
 
 const aggregate = (filePath) => {
-  let countryObjects;
-  const countryMap = [];
-  const conti = [];
+  const FILE = "countriesmap.txt";
+  const FILE1 = filePath;
+  const readCountryFilePromise = () => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(FILE1, 'utf8', (err, data) => {
+        if (err) reject(err);
+        else
+          resolve(data);
+      });
+    });
+  };
+  const readDataFilePromise = () => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(FILE, 'utf8', (err, data) => {
+        if (err) reject(err);
+        else
+          resolve(data);
+      });
+    });
+  };
 
-  // converting country continent to map
-  const fileContents = fs.readFileSync('countriesmap.txt', 'utf8');
-  const splitString = fileContents.split('\n');
-  let splitByComma;
-  const countryContinentMap = new Map();
-  for (let i = 0; i < splitString.length; i += 1) {
-    splitByComma = splitString[i].split(',');
-    splitByComma[1] = splitByComma[1].replace(/\r/g, '');
-    countryContinentMap.set(splitByComma[0], splitByComma[1]);
-  }
+  Promise.all([readCountryFilePromise(), readDataFilePromise()]).then((values) => {
+    let data1 = values[1];
+    let data = values[0];
+    //  console.log(data);
+    let countryObjects;
+    const countryMap = [];
+    const dataString = data.toString();
+    const splitData = dataString.split('\n');
+    const headers = splitData[0].split(',');
+    for (let i = 0; i < headers.length; i += 1) {
+      headers[i] = headers[i].replace(/['"]+/g, '');
+    }
+    for (let i = 1; i < splitData.length; i += 1) {
+      const cleanData = splitData[i].split(',');
+      for (let k = 0; k < cleanData.length; k += 1) {
+        cleanData[k] = cleanData[k].replace(/['"]+/g, '');
+      }
+      countryObjects = {};
+      for (let j = 0; j < cleanData.length; j += 1) {
+        countryObjects[headers[j]] = cleanData[j];
+      }
+      countryMap.push(countryObjects);
+    }
+    // console.log(countryMap);
+    const splitString = data1.split('\n');
+    let splitByComma;
+    const countryContinentMap = new Map();
+    for (let i = 0; i < splitString.length; i += 1) {
+      splitByComma = splitString[i].split(',');
+      splitByComma[1] = splitByComma[1].replace(/\r/g, '');
+      countryContinentMap.set(splitByComma[0], splitByComma[1]);
+    }
+    // console.log(countryContinentMap);
+    const conti = [];
 
-  // reading datafile and making final op
-  const data = fs.readFileSync(filePath, 'utf8');
-  const dataString = data.toString();
-  const splitData = dataString.split('\n');
-  const headers = splitData[0].split(',');
-  for (let i = 0; i < headers.length; i += 1) {
-    headers[i] = headers[i].replace(/['"]+/g, '');
-  }
-  for (let i = 1; i < splitData.length; i += 1) {
-    const cleandata = splitData[i].split(',');
-    for (let k = 0; k < cleandata.length; k += 1) {
-      cleandata[k] = cleandata[k].replace(/['"]+/g, '');
-    }
-    countryObjects = {};
-    for (let j = 0; j < cleandata.length; j += 1) {
-      countryObjects[headers[j]] = cleandata[j];
-    }
-    countryMap.push(countryObjects);
-  }
-  for (let i = 0; i < countryMap.length; i += 1) {
-    if (countryMap[i]['Country Name'] !== 'European Union') {
-      countryMap[i].continent = countryContinentMap.get(countryMap[i]['Country Name']);
-      conti.push(countryContinentMap.get(countryMap[i]['Country Name']));
-    }
-  }
-  const continent = new Set(conti);
-  const contisplitData = [...continent];
-  contisplitData.splice(6, 1);
-  const finalsplitData = [];
-  const countryObjectsectdefined = {};
-  for (let i = 0; i < contisplitData.length; i += 1) {
-    let sumpop = 0;
-    let sumgdp = 0;
-    for (let j = 0; j < countryMap.length; j += 1) {
-      if (contisplitData[i] === countryMap[j].continent) {
-        sumpop += parseFloat(countryMap[j]['Population (Millions) - 2012']);
-        sumgdp += parseFloat(countryMap[j]['GDP Billions (US Dollar) - 2012']);
+    for (let i = 0; i < countryMap.length; i += 1) {
+      if (countryMap[i]['Country Name'] !== 'European Union') {
+        countryMap[i].continent = countryContinentMap.get(countryMap[i]['Country Name']);
+        conti.push(countryContinentMap.get(countryMap[i]['Country Name']));
       }
     }
-    const name = {};
-    name.GDP_2012 = sumgdp;
-    name.POPULATION_2012 = sumpop;
-    finalsplitData.push(name);
-  }
-  for (let i = 0; i < contisplitData.length; i += 1) {
-    countryObjectsectdefined[contisplitData[i]] = finalsplitData[i];
-  }
-  fs.writeFileSync('./output/output.json', JSON.stringify(countryObjectsectdefined));
-};
+    const continent = new Set(conti);
+    const contiSplitData = [...continent];
+    contiSplitData.splice(6, 1);
+    const finalSplitData = [];
+    const countryObjectsectdefined = {};
+    for (let i = 0; i < contiSplitData.length; i += 1) {
+      let sumPopulation = 0;
+      let sumGDP = 0;
+      for (let j = 0; j < countryMap.length; j += 1) {
+        if (contiSplitData[i] === countryMap[j].continent) {
+          sumPopulation += parseFloat(countryMap[j]['Population (Millions) - 2012']);
+          sumGDP += parseFloat(countryMap[j]['GDP Billions (US Dollar) - 2012']);
+        }
+      }
+      const name = {};
+      name.GDP_2012 = sumGDP;
+      name.POPULATION_2012 = sumPopulation;
+      finalSplitData.push(name);
+    }
+    for (let i = 0; i < contiSplitData.length; i += 1) {
+      countryObjectsectdefined[contiSplitData[i]] = finalSplitData[i];
+    }
+    fs.writeFileSync('./output/output.json', JSON.stringify(countryObjectsectdefined));
+
+  });
+}
+
 module.exports = aggregate;
