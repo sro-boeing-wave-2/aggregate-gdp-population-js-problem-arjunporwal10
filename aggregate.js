@@ -1,30 +1,39 @@
-const fs = require("fs");
+const fs = require('fs');
 
-const aggregate = (filePath) => {
-  const FILE = "countriesmap.txt";
-  const FILE1 = filePath;
-  const readCountryFilePromise = () => {
-    return new Promise((resolve, reject) => {
-      fs.readFile(FILE1, 'utf8', (err, data) => {
-        if (err) reject(err);
-        else
-          resolve(data);
-      });
+function writeFile(filePath, data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filePath, data, (error) => {
+      if (error === null) {
+        resolve(data);
+      } else {
+        reject(error);
+      }
     });
-  };
-  const readDataFilePromise = () => {
-    return new Promise((resolve, reject) => {
-      fs.readFile(FILE, 'utf8', (err, data) => {
-        if (err) reject(err);
-        else
-          resolve(data);
-      });
-    });
-  };
+  });
+}
+const outputFile = './output/output.json';
 
-  Promise.all([readCountryFilePromise(), readDataFilePromise()]).then((values) => {
-    let data1 = values[1];
-    let data = values[0];
+const readCountryFilePromise = function functionName(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+};
+const readDataFilePromise = function functionName1(FILE) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(FILE, 'utf8', (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+};
+const FILE = 'countriesmap.txt';
+const aggregate = filePath => new Promise((resolve, reject) => {
+  Promise.all([readCountryFilePromise(filePath), readDataFilePromise(FILE)]).then((values) => {
+    const data1 = values[1];
+    const data = values[0];
     //  console.log(data);
     let countryObjects;
     const countryMap = [];
@@ -85,9 +94,13 @@ const aggregate = (filePath) => {
     for (let i = 0; i < contiSplitData.length; i += 1) {
       countryObjectsectdefined[contiSplitData[i]] = finalSplitData[i];
     }
-    fs.writeFileSync('./output/output.json', JSON.stringify(countryObjectsectdefined));
-
+    writeFile(outputFile, JSON.stringify(countryObjectsectdefined)).then(() => {
+      resolve();
+    }).catch((error) => {
+      reject(error);
+    });
+  }).catch((error) => {
+    reject(error);
   });
-}
-
+});
 module.exports = aggregate;
