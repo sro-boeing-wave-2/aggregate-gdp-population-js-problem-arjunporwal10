@@ -34,29 +34,29 @@ const aggregate = filePath => new Promise((resolve, reject) => {
     // console.log(csvProcessedData);
     const headers = csvProcessedData.shift().split(',');
     // console.log(csvProcessedData);
-    const getIndexOfCountryName = headers.indexOf('Country Name');
-    const getIndexOfGdp2012 = headers.indexOf('GDP Billions (US Dollar) - 2012');
-    const getIndexOfPopulation2012 = headers.indexOf('Population (Millions) - 2012');
-    // console.log(getIndexOfCountryName, getIndexOfGdp2012, getIndexOfPopulation2012);
+    const IndexOfCountryName = headers.indexOf('Country Name');
+    const IndexOfGdp2012 = headers.indexOf('GDP Billions (US Dollar) - 2012');
+    const IndexOfPopulation2012 = headers.indexOf('Population (Millions) - 2012');
+    // console.log(IndexOfCountryName, IndexOfGdp2012, IndexOfPopulation2012);
     // console.log(csvProcessedData[1]);
     const aggregateContinentData = {};
     csvProcessedData.forEach((row) => {
       const cells = row.split(',');
-      // console.log(mapperdata[cells[getIndexOfCountryName]]);
+      // console.log(mapperdata[cells[IndexOfCountryName]]);
       // console.log('this is undefined');
-      if (mapperdata[cells[getIndexOfCountryName]] !== undefined) {
-        const nameOfContinent = mapperdata[cells[getIndexOfCountryName]];
+      if (mapperdata[cells[IndexOfCountryName]] !== undefined) {
+        const nameOfContinent = mapperdata[cells[IndexOfCountryName]];
         // console.log(nameOfContinent);
         if (aggregateContinentData[nameOfContinent] === undefined) {
           aggregateContinentData[nameOfContinent] = {};
-          aggregateContinentData[nameOfContinent].GDP_2012 = parseFloat(cells[getIndexOfGdp2012]);
+          aggregateContinentData[nameOfContinent].GDP_2012 = parseFloat(cells[IndexOfGdp2012]);
           aggregateContinentData[nameOfContinent]
-            .POPULATION_2012 = parseFloat(cells[getIndexOfPopulation2012]);
+            .POPULATION_2012 = parseFloat(cells[IndexOfPopulation2012]);
         } else {
-          aggregateContinentData[nameOfContinent].GDP_2012 += parseFloat(cells[getIndexOfGdp2012]);
+          aggregateContinentData[nameOfContinent].GDP_2012 += parseFloat(cells[IndexOfGdp2012]);
           aggregateContinentData[nameOfContinent]
-            .POPULATION_2012 += parseFloat(cells[getIndexOfPopulation2012]);
-          // console.log(cells[getIndexOfGdp2012]);
+            .POPULATION_2012 += parseFloat(cells[IndexOfPopulation2012]);
+          // console.log(cells[IndexOfGdp2012]);
         }
       }
     });
