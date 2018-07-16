@@ -1,5 +1,8 @@
 const fs = require('fs');
 
+const mapperFilePath = 'countryContinentJsonFile.json';
+const outputFile = './output/output.json';
+// write file using async method and return a promise
 function writeFile(filePath, data) {
   return new Promise((resolve, reject) => {
     fs.writeFile(filePath, data, (error) => {
@@ -11,9 +14,10 @@ function writeFile(filePath, data) {
     });
   });
 }
-const outputFile = './output/output.json';
 
-const readCountryFilePromise = function functionName(filePath) {
+
+// read file using async method and return a promise
+const readFilePromise = function functionName(filePath) {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) reject(err);
@@ -21,80 +25,43 @@ const readCountryFilePromise = function functionName(filePath) {
     });
   });
 };
-const readDataFilePromise = function functionName1(FILE) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(FILE, 'utf8', (err, data) => {
-      if (err) reject(err);
-      else resolve(data);
-    });
-  });
-};
-const FILE = 'countriesmap.txt';
+// aggregate is a promise which is fulfilled when write async is complete
 const aggregate = filePath => new Promise((resolve, reject) => {
-  Promise.all([readCountryFilePromise(filePath), readDataFilePromise(FILE)]).then((values) => {
-    const data1 = values[1];
-    const data = values[0];
-    //  console.log(data);
-    let countryObjects;
-    const countryMap = [];
-    const dataString = data.toString();
-    const splitData = dataString.split('\n');
-    const headers = splitData[0].split(',');
-    for (let i = 0; i < headers.length; i += 1) {
-      headers[i] = headers[i].replace(/['"]+/g, '');
-    }
-    for (let i = 1; i < splitData.length; i += 1) {
-      const cleanData = splitData[i].split(',');
-      for (let k = 0; k < cleanData.length; k += 1) {
-        cleanData[k] = cleanData[k].replace(/['"]+/g, '');
-      }
-      countryObjects = {};
-      for (let j = 0; j < cleanData.length; j += 1) {
-        countryObjects[headers[j]] = cleanData[j];
-      }
-      countryMap.push(countryObjects);
-    }
-    // console.log(countryMap);
-    const splitString = data1.split('\n');
-    let splitByComma;
-    const countryContinentMap = new Map();
-    for (let i = 0; i < splitString.length; i += 1) {
-      splitByComma = splitString[i].split(',');
-      splitByComma[1] = splitByComma[1].replace(/\r/g, '');
-      countryContinentMap.set(splitByComma[0], splitByComma[1]);
-    }
-    // console.log(countryContinentMap);
-    const conti = [];
-
-    for (let i = 0; i < countryMap.length; i += 1) {
-      if (countryMap[i]['Country Name'] !== 'European Union') {
-        countryMap[i].continent = countryContinentMap.get(countryMap[i]['Country Name']);
-        conti.push(countryContinentMap.get(countryMap[i]['Country Name']));
-      }
-    }
-    const continent = new Set(conti);
-    const contiSplitData = [...continent];
-    contiSplitData.splice(6, 1);
-    const finalSplitData = [];
-    const countryObjectsectdefined = {};
-    for (let i = 0; i < contiSplitData.length; i += 1) {
-      let sumPopulation = 0;
-      let sumGDP = 0;
-      for (let j = 0; j < countryMap.length; j += 1) {
-        if (contiSplitData[i] === countryMap[j].continent) {
-          sumPopulation += parseFloat(countryMap[j]['Population (Millions) - 2012']);
-          sumGDP += parseFloat(countryMap[j]['GDP Billions (US Dollar) - 2012']);
+  Promise.all([readFilePromise(filePath), readFilePromise(mapperFilePath)]).then((values) => {
+    const mapperdata = JSON.parse(values[1]);
+    const csvFileData = values[0];
+    const csvProcessedData = csvFileData.replace(/['"]+/g, '').split('\n');
+    // console.log(csvProcessedData);
+    const headers = csvProcessedData.shift().split(',');
+    // console.log(csvProcessedData);
+    const getIndexOfCountryName = headers.indexOf('Country Name');
+    const getIndexOfGdp2012 = headers.indexOf('GDP Billions (US Dollar) - 2012');
+    const getIndexOfPopulation2012 = headers.indexOf('Population (Millions) - 2012');
+    // console.log(getIndexOfCountryName, getIndexOfGdp2012, getIndexOfPopulation2012);
+    // console.log(csvProcessedData[1]);
+    const aggregateContinentData = {};
+    csvProcessedData.forEach((row) => {
+      const cells = row.split(',');
+      // console.log(mapperdata[cells[getIndexOfCountryName]]);
+      // console.log('this is undefined');
+      if (mapperdata[cells[getIndexOfCountryName]] !== undefined) {
+        const nameOfContinent = mapperdata[cells[getIndexOfCountryName]];
+        // console.log(nameOfContinent);
+        if (aggregateContinentData[nameOfContinent] === undefined) {
+          aggregateContinentData[nameOfContinent] = {};
+          aggregateContinentData[nameOfContinent].GDP_2012 = parseFloat(cells[getIndexOfGdp2012]);
+          aggregateContinentData[nameOfContinent]
+            .POPULATION_2012 = parseFloat(cells[getIndexOfPopulation2012]);
+        } else {
+          aggregateContinentData[nameOfContinent].GDP_2012 += parseFloat(cells[getIndexOfGdp2012]);
+          aggregateContinentData[nameOfContinent]
+            .POPULATION_2012 += parseFloat(cells[getIndexOfPopulation2012]);
+          // console.log(cells[getIndexOfGdp2012]);
         }
       }
-      const name = {};
-      name.GDP_2012 = sumGDP;
-      name.POPULATION_2012 = sumPopulation;
-      finalSplitData.push(name);
-    }
-    for (let i = 0; i < contiSplitData.length; i += 1) {
-      countryObjectsectdefined[contiSplitData[i]] = finalSplitData[i];
-    }
-    writeFile(outputFile, JSON.stringify(countryObjectsectdefined)).then(() => {
+    });
+    // console.log(aggregateContinentData);
+    writeFile(outputFile, JSON.stringify(aggregateContinentData)).then(() => {
       resolve();
     }).catch((error) => {
       reject(error);
